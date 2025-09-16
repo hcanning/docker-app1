@@ -1,0 +1,19 @@
+<% layout('layout', { user: user }) %>
+<div class="toolbar">
+  <a href="/new">New Note</a>
+</div>
+<ul class="notes">
+  <% notes.forEach(n => { %>
+    <li>
+      <h3><%= n.title %></h3>
+      <p><%= n.content %></p>
+      <small><%= new Date(n.created_at).toLocaleString() %></small>
+      <div class="actions">
+        <a href="/edit/<%= n.id %>">Edit</a>
+        <form method="post" action="/delete/<%= n.id %>" style="display:inline">
+          <button type="submit">Delete</button>
+        </form>
+      </div>
+    </li>
+  <% }) %>
+</ul>

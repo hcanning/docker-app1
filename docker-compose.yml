@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - --api.insecure=false
+      - --log.level=INFO
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      - --certificatesResolvers.myresolver.acme.httpChallenge.entryPoint=web
+      - --certificatesResolvers.myresolver.acme.email=ops@hcann.com
+      - --certificatesResolvers.myresolver.acme.storage=/acme/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: appdb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://appuser:secretpassword@db:5432/appdb
+      JWT_SECRET: somesecretkey_change_me
+      ADMIN_USER: admin
+      ADMIN_PASS: 'Willow2019$'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`docker-app1.hcann.com`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  traefik-acme:

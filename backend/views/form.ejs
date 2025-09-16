@@ -1,0 +1,7 @@
+<% layout('layout', { user: null }) %>
+<form method="post" class="card" action="<%= note ? '/edit/' + note.id : '/new' %>">
+  <h2><%= note ? 'Edit note' : 'New note' %></h2>
+  <label>Title<input name="title" required value="<%= note ? note.title : '' %>"></label>
+  <label>Content<textarea name="content"><%= note ? note.content : '' %></textarea></label>
+  <button type="submit">Save</button>
+</form>
